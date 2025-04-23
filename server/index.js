@@ -1,29 +1,27 @@
-// server/index.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Connect MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('✅ MongoDB connected');
-}).catch(err => console.error('❌ Mongo Error:', err));
-
-
-// Temporary route
 app.get('/', (req, res) => {
-  res.send('Habit Tracker API');
+  res.send('Hello, World!');
 });
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+async function connectToDatabase() {
+  await mongoose.connect("mongodb://127.0.0.1:27017/", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+  console.log('Connected to MongoDB');
+}
+connectToDatabase();
+
+app.listen(5000, () => {
+  console.log('Server started on port 5000');
+})
+
