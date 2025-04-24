@@ -1,53 +1,66 @@
 const Habit = require("../models/Habit");
 
-// Controller function to create a new habit
 const createHabit = async (req, res) => {
   try {
-    const { userId, name, frequency, startDate, endDate } = req.body;
-    const habit = new Habit({
-      user: userId,
+    const { userId, name, startDate, endDate } = req.body;
+
+    const habit = await Habit.create({
+      userId,
       name,
-      frequency,
       startDate,
-      endDate,
-      progress: [],
-      streak: 0
+      endDate
     });
-    await habit.save();
+
     res.status(201).json(habit);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-// Controller function to mark habit as completed
+
 const completeHabit = async (req, res) => {
   try {
-    const { habitId, date, completed } = req.body;
-
+    const { habitId, date } = req.body;
     const habit = await Habit.findById(habitId);
-    if (!habit) {
-      return res.status(404).json({ message: "Habit not found" });
+
+    if (!habit) return res.status(404).json({ message: "Habit not found" });
+
+    const today = new Date(date);
+    const last = new Date(habit.lastCompleted || 0);
+
+    // Prevent duplicate completion
+    if (habit.completedDates.some(d => new Date(d).toDateString() === today.toDateString())) {
+      return res.status(400).json({ message: "Already completed for today" });
     }
 
-    // Add progress entry for the habit
-    habit.progress.push({ date, completed });
+    // Update streak (check if completed yesterday)
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
 
-    // Update streak logic
-    if (completed) {
-      const lastProgress = habit.progress[habit.progress.length - 2];
-      if (lastProgress && lastProgress.completed) {
-        habit.streak += 1;
-      } else {
-        habit.streak = 1;
-      }
+    if (last.toDateString() === yesterday.toDateString()) {
+      habit.streak += 1;
+    } else {
+      habit.streak = 1; // restart
     }
+
+    // Level up every 5 streaks (customizable)
+    if (habit.streak % 5 === 0) {
+      habit.level += 1;
+    }
+
+    habit.lastCompleted = today;
+    habit.completedDates.push(today);
 
     await habit.save();
+
     res.status(200).json(habit);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-module.exports = { createHabit, completeHabit };
+
+module.exports = {
+  createHabit,
+  completeHabit
+};

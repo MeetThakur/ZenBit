@@ -1,18 +1,16 @@
 const mongoose = require("mongoose");
 
 const habitSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    name: { type: String, required: true },
-    frequency: { type: String, enum: ["daily", "weekly", "monthly"], default: "daily" },
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true },
-    progress: [
-      {
-        date: { type: Date, required: true },
-        completed: { type: Boolean, default: false }
-      }
-    ],
-    streak: { type: Number, default: 0 }
-  });
-  
-module.exports = mongoose.model("Habit", habitSchema);
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  name: { type: String, required: true },
+  startDate: { type: Date, required: true },
+  endDate: { type: Date, required: true },
+  streak: { type: Number, default: 0 },
+  level: { type: Number, default: 1 },
+  lastCompleted: { type: Date },
+  completedDates: [{ type: Date }]
+});
+
+const Habit = mongoose.model("Habit", habitSchema);
+module.exports = Habit;
+
